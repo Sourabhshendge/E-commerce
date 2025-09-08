@@ -1,0 +1,7 @@
+
+body {
+	background: linear-gradient(120deg, #f8faff 0%, #e3f0ff 100%);
+	min-height: 100vh;
+	margin: 0;
+	font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+}
