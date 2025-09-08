@@ -1,0 +1,10 @@
+# Node / React
+/E-commerce-Frontend/node_modules/
+/E-commerce-Frontend/build/
+
+# Java / Spring Boot
+/E-commerce-Backend/target/
+/E-commerce-Backend/.mvn/
+/E-commerce-Backend/.gradle/
+/E-commerce-Backend/*.iml
+
