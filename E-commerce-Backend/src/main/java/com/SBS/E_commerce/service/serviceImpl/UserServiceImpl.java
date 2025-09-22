@@ -39,7 +39,7 @@ public class UserServiceImpl implements UserService {
                 .email(dto.getEmail())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .phoneNumber(dto.getPhoneNumber())
-                .role(Role.SELLER)
+                .role(Role.CUSTOMER)
                 .verified(false) // optional: add a boolean field 'verified' in User
                 .build();
 

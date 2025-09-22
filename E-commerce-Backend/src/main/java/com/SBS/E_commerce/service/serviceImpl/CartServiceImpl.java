@@ -15,6 +15,8 @@ import com.SBS.E_commerce.repository.ProductRepository;
 import com.SBS.E_commerce.service.CartService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.cache.annotation.Cacheable;
@@ -44,7 +46,12 @@ public class CartServiceImpl implements CartService {
                 .orElseGet(() -> Cart.builder()
                         .id(UUID.randomUUID().toString())
                         .userId(request.getUserId())
+                        .items(new ArrayList<>()) // Initialize items here!
                         .build());
+
+        if (cart.getItems() == null) {
+            cart.setItems(new ArrayList<>());
+        }
 
         boolean exists = false;
         for (CartItem item : cart.getItems()) {

@@ -8,4 +8,5 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     List<Product> findByCategory(Category category);
     List<Product> findByNameContainingIgnoreCase(String name);
     List<Product> findByPriceBetween(Double minPrice, Double maxPrice);
+    List<Product> findByNameIn(List<String> names);
 }

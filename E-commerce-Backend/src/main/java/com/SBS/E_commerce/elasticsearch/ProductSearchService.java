@@ -30,59 +30,68 @@ public class ProductSearchService {
         this.repository = repository;
     }
 
-    // Save a product to index
-    public ProductIndex save(ProductIndex product) {
-        return repository.save(product);
-    }
 
     public List<ProductResponseDTO> smartSearch(String query) {
-        Criteria criteria = new Criteria();
         double maxPrice = Double.MAX_VALUE;
         double minPrice = 0.0;
 
         try {
             String lowerQuery = query.toLowerCase();
 
-            // Handle "under <price>"
             if (lowerQuery.contains("under")) {
                 String priceStr = lowerQuery.split("under")[1].trim().replaceAll("[^0-9]", "");
                 if (!priceStr.isEmpty()) maxPrice = Double.parseDouble(priceStr);
-                query = query.split("under")[0].trim(); // remove price part
+                query = query.split("under")[0].trim();
             }
-            // Handle "above <price>"
-            else if (lowerQuery.contains("above")) {
+            if (lowerQuery.contains("above")) {
                 String priceStr = lowerQuery.split("above")[1].trim().replaceAll("[^0-9]", "");
                 if (!priceStr.isEmpty()) minPrice = Double.parseDouble(priceStr);
-                query = query.split("above")[0].trim(); // remove price part
+                query = query.split("above")[0].trim();
             }
-
-            // Name matching (case-insensitive, partial match)
-            if (!query.isEmpty()) {
-                criteria = criteria.and(new Criteria("name").contains(query));
-            }
-
-            // Apply price filter
-            criteria = criteria.and(new Criteria("price").between(minPrice, maxPrice));
-
         } catch (Exception e) {
             System.err.println("Error parsing query: " + e.getMessage());
         }
 
-        // Elasticsearch search
+        String[] terms = query.trim().toLowerCase().split("\\s+");
+
+        Criteria phraseCriteria = new Criteria("name").expression("\"" + query.trim() + "\"");
+
+        Criteria fuzzyCriteria = null;
+        for (String term : terms) {
+            if (!term.isEmpty()) {
+                if (fuzzyCriteria == null) {
+                    fuzzyCriteria = new Criteria("name").fuzzy(term);
+                } else {
+                    fuzzyCriteria = fuzzyCriteria.and(new Criteria("name").fuzzy(term));
+                }
+            }
+        }
+
+        Criteria criteria;
+        if (fuzzyCriteria != null) {
+            criteria = new Criteria().or(phraseCriteria).or(fuzzyCriteria);
+        } else {
+            criteria = phraseCriteria;
+        }
+
+        criteria = criteria.and(new Criteria("price").between(minPrice, maxPrice));
+
         Query searchQuery = new CriteriaQuery(criteria);
+
         SearchHits<ProductIndex> hits = elasticsearchOperations.search(searchQuery, ProductIndex.class);
 
-        // Fetch full product data from MySQL
         List<String> productIds = hits.stream()
                 .map(hit -> hit.getContent().getId())
                 .toList();
+
         List<Product> products = productRepository.findAllById(productIds);
 
-        // Map to DTO
         return products.stream()
                 .map(this::mapToDTO)
                 .toList();
     }
+
+
 
 
 

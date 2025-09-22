@@ -47,7 +47,7 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final CacheManager cacheManager;
-    private ProductSearchRepository productSearchRepository;
+    private final ProductSearchRepository productSearchRepository;
 
     // ---------------- Create ----------------
     @Override
