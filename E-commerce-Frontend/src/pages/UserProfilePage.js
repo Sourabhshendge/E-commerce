@@ -80,11 +80,6 @@ const handleLogout = useCallback(() => {
             <Typography sx={{ fontSize: 18 }}>{userInfo.phoneNumber}</Typography>
           </Box>
 
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="subtitle1" fontWeight="bold" color="text.secondary">User ID</Typography>
-            <Typography sx={{ fontSize: 18 }}>{userInfo.id || user.userId}</Typography>
-          </Box>
-
           <Button variant="contained" color="secondary" onClick={handleLogout} sx={{ borderRadius: 2, fontWeight: 600, py: 1, mt: 2 }}>
             Logout
           </Button>

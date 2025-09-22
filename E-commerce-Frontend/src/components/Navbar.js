@@ -2,16 +2,40 @@ import { AppBar, Toolbar, Typography, Button, IconButton, Box, Menu, MenuItem, B
 import "../App.css";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getAllCategories } from "../api/categoryApi";
 import { useCart } from "../context/CartContext";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [anchorCat, setAnchorCat] = useState(null);
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await getAllCategories(token);
+        let cats = res.data;
+        if (!Array.isArray(cats)) {
+          if (cats && Array.isArray(cats.data)) {
+            cats = cats.data;
+          } else if (cats && Array.isArray(cats.content)) {
+            cats = cats.content;
+          } else {
+            cats = [];
+          }
+        }
+        setCategories(cats);
+      } catch {
+        setCategories([]);
+      }
+    };
+    fetchCategories();
+  }, []);
   const [anchorUser, setAnchorUser] = useState(null);
   const { cart } = useCart();
   const cartCount = cart?.items?.reduce((sum, item) => sum + (item.quantity || 1), 0) || 0;
@@ -31,13 +55,46 @@ export default function Navbar() {
           to="/"
           sx={{ color: "primary.main", textDecoration: "none", fontWeight: "bold", letterSpacing: 1 }}
         >
-          MyShop
+          PrimeCart
         </Typography>
 
         {/* Navigation */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Button component={Link} to="/" color="inherit" sx={{ fontWeight: 500 }}>Home</Button>
-          {/* Categories button and menu removed as requested */}
+          <Button
+            color="inherit"
+            sx={{ fontWeight: 500 }}
+            onClick={e => setAnchorCat(e.currentTarget)}
+          >
+            Categories
+          </Button>
+          <Button
+            color="inherit"
+            sx={{ fontWeight: 500 }}
+            component={Link}
+            to="/likes"
+          >
+            Wishlist
+          </Button>
+          <Menu
+            anchorEl={anchorCat}
+            open={Boolean(anchorCat)}
+            onClose={() => setAnchorCat(null)}
+          >
+            {categories.length === 0 && (
+              <MenuItem disabled>Loading...</MenuItem>
+            )}
+            {categories.map(cat => (
+              <MenuItem
+                key={cat.id}
+                component={Link}
+                to={`/categories/${cat.id}`}
+                onClick={() => setAnchorCat(null)}
+              >
+                {cat.name}
+              </MenuItem>
+            ))}
+          </Menu>
           {user && (
             <Button component={Link} to="/orders" color="inherit" sx={{ fontWeight: 500 }}>Orders</Button>
           )}

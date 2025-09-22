@@ -1,9 +1,9 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { createPaymentOrder, verifyPayment } from "../api/paymentApi";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import { Box, Typography, Paper, Button, Divider, CircularProgress, Chip, Stack, Avatar } from "@mui/material";
+import { Box, Typography, Paper, Button, Divider, CircularProgress, Chip, Stack, Avatar, Snackbar, Alert } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 function buildImageUrl(url) {
@@ -12,7 +12,7 @@ function buildImageUrl(url) {
   return `http://localhost:8081${url.startsWith("/") ? url : "/" + url}`;
 }
 
-function CartItem({ item, onRemove }) {
+function CartItem({ item, onRemove, showToast }) {
   const product = item.product || {};
   const imageUrl = product.imageUrls?.[0]
     ? buildImageUrl(product.imageUrls[0])
@@ -31,7 +31,7 @@ function CartItem({ item, onRemove }) {
         </Typography>
         <Typography variant="body2">Quantity: {item.quantity}</Typography>
       </Box>
-      <Button color="error" variant="outlined" onClick={() => onRemove(product.productId)}>
+      <Button color="error" variant="outlined" onClick={() => { onRemove(product.productId); showToast && showToast('Product removed from cart', 'info'); }}>
         Remove
       </Button>
     </Paper>
@@ -68,7 +68,8 @@ function CartPage() {
   const { cart, loading, error, removeFromCart, placeOrder } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [checkoutLoading, setCheckoutLoading] = React.useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [toast, setToast] = useState({ open: false, message: '', type: 'success' });
   const userId = user?.userId || "";
   const token = localStorage.getItem("token");
 
@@ -79,19 +80,19 @@ function CartPage() {
   const handleRazorpayPayment = async () => {
     if (!cart || !cart.items?.length) return;
     setCheckoutLoading(true);
-    try {
+  try {
       // Calculate total in rupees
       const total = cart.items.reduce((sum, item) => sum + ((item.product?.price || 0) * item.quantity), 0);
       // 1. Create order on backend
-      const res = await createPaymentOrder(userId, total, token);
-      const order = res.data;
+  const res = await createPaymentOrder(userId, total, token);
+  const order = res.data;
       // 2. Open Razorpay checkout
-      const options = {
+  const options = {
         key: "rzp_test_RB4vopWfCS41ot",
         amount: order.amount, // in paise
         currency: order.currency,
         order_id: order.razorpayOrderId,
-        handler: async function (response) {
+  handler: async function (response) {
           // 3. Verify payment on backend
           const verifyRes = await verifyPayment({
             razorpay_order_id: response.razorpay_order_id,
@@ -102,10 +103,11 @@ function CartPage() {
             // Place order in app after payment
             const placedOrder = await placeOrder();
             if (placedOrder) {
+              setToast({ open: true, message: 'Payment successful! Order placed.', type: 'success' });
               navigate("/order-confirmation", { state: { order: placedOrder } });
             }
           } else {
-            alert("Payment verification failed");
+            setToast({ open: true, message: 'Payment verification failed', type: 'error' });
           }
         },
         prefill: {},
@@ -114,7 +116,7 @@ function CartPage() {
       const rzp = new window.Razorpay(options);
       rzp.open();
     } catch (err) {
-      alert("Payment failed: " + (err?.message || "Unknown error"));
+      setToast({ open: true, message: 'Payment failed: ' + (err?.message || 'Unknown error'), type: 'error' });
     } finally {
       setCheckoutLoading(false);
     }
@@ -122,12 +124,17 @@ function CartPage() {
 
   return (
     <Box sx={{ maxWidth: 600, mx: 'auto', mt: 4, p: 2 }}>
+      <Snackbar open={toast.open} autoHideDuration={2500} onClose={() => setToast({ ...toast, open: false })} anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+          <Alert elevation={6} variant="filled" severity={toast.type} sx={{ width: '100%' } }>
+            {toast.message}
+          </Alert>
+      </Snackbar>
       <Typography variant="h4" fontWeight="bold" mb={3}>My Cart</Typography>
       <Divider sx={{ mb: 2 }} />
       {cart?.items?.length ? (
         <>
           {cart.items.map((item) => (
-            <CartItem key={item.cartItemId} item={item} onRemove={removeFromCart} />
+            <CartItem key={item.cartItemId} item={item} onRemove={removeFromCart} showToast={(msg, type) => setToast({ open: true, message: msg, type })} />
           ))}
           {/* Razorpay payment button */}
           <Button

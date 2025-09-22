@@ -45,12 +45,19 @@ export const getProductById = (productId, token) => {
 };
 
 // GET ALL PRODUCTS (with pagination & sorting)
-export const getAllProducts = (page = 0, size = 10, sort = "id,asc", token) => {
+export const getAllProducts = (
+  page = 0,
+  size = 10,
+  sortBy = "productId",
+  sortDir = "asc",
+  token
+) => {
   return api.get(`/admin/products/page`, {
-    params: { page, size, sort },
+    params: { page, size, sortBy, sortDir }, // ✅ match backend params
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
 };
+
 
 // SEARCH PRODUCTS
 export const searchProducts = (keyword, token) => {
@@ -69,10 +76,19 @@ export const filterProductsByCategory = (categoryId, token) => {
   );
 };
 
+
 // FILTER BY PRICE RANGE
 export const filterProductsByPrice = (min, max, token) => {
   return api.get(`/admin/products/filter/price`, {
     params: { min, max },
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+};
+
+// GET RECOMMENDED PRODUCTS (topN fixed to 5)
+export const getRecommendations = (productName, token) => {
+  return api.get(`/recommendations/recommend`, {
+    params: { product: productName, topN: 5 },
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
 };

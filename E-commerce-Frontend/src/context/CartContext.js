@@ -12,10 +12,7 @@ export function useCart() {
 export function CartProvider({ children }) {
   const { user } = useAuth();
   // Try to load cart from localStorage first
-  const [cart, setCart] = useState(() => {
-    const stored = localStorage.getItem('cart');
-    return stored ? JSON.parse(stored) : null;
-  });
+  const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -35,8 +32,14 @@ export function CartProvider({ children }) {
     setError("");
     try {
       const res = await getCart(userId);
-      setCart(res.data.data);
-      localStorage.setItem('cart', JSON.stringify(res.data.data));
+      const backendCart = res.data.data;
+      if (!backendCart || !backendCart.items || backendCart.items.length === 0) {
+        setCart(null);
+        localStorage.removeItem('cart');
+      } else {
+        setCart(backendCart);
+        localStorage.setItem('cart', JSON.stringify(backendCart));
+      }
     } catch (err) {
       setError("Failed to fetch cart");
       setCart(null);

@@ -2,7 +2,6 @@ import { Box, Typography, Chip, Button, Stack, Paper } from "@mui/material";
 import { useCart } from "../context/CartContext";
 import React, { useState, useMemo } from "react";
 
-
 const ProductDetailsView = React.memo(function ProductDetailsView({ product }) {
   const { addToCart, loading: cartLoading } = useCart();
   const [imgIndex, setImgIndex] = useState(0);
@@ -22,6 +21,7 @@ const ProductDetailsView = React.memo(function ProductDetailsView({ product }) {
   return (
     <Paper elevation={4} sx={{ maxWidth: 600, mx: "auto", mt: 5, p: 4, borderRadius: 4, bgcolor: "#fafbfc" }}>
       <Box sx={{ display: "flex", flexDirection: { xs: "column", md: "row" }, gap: 4 }}>
+        
         {/* Image Carousel */}
         <Box sx={{ flex: 1, minWidth: 320, maxWidth: 350, display: "flex", flexDirection: "column", alignItems: "center" }}>
           <Box sx={{ position: "relative", width: 320, height: 320, mb: 2 }}>
@@ -38,8 +38,12 @@ const ProductDetailsView = React.memo(function ProductDetailsView({ product }) {
             )}
             {images.length > 1 && (
               <>
-                <Button onClick={handlePrev} size="small" sx={{ position: "absolute", left: 8, top: "45%", minWidth: 0, px: 1, bgcolor: "#fff8", borderRadius: "50%" }}>&lt;</Button>
-                <Button onClick={handleNext} size="small" sx={{ position: "absolute", right: 8, top: "45%", minWidth: 0, px: 1, bgcolor: "#fff8", borderRadius: "50%" }}>&gt;</Button>
+                <Button onClick={handlePrev} size="small" sx={{ position: "absolute", left: 8, top: "45%", minWidth: 0, px: 1, bgcolor: "#fff8", borderRadius: "50%" }}>
+                  &lt;
+                </Button>
+                <Button onClick={handleNext} size="small" sx={{ position: "absolute", right: 8, top: "45%", minWidth: 0, px: 1, bgcolor: "#fff8", borderRadius: "50%" }}>
+                  &gt;
+                </Button>
               </>
             )}
           </Box>
@@ -62,27 +66,46 @@ const ProductDetailsView = React.memo(function ProductDetailsView({ product }) {
             </Stack>
           )}
         </Box>
+
         {/* Product Info */}
         <Box sx={{ flex: 2, minWidth: 260 }}>
-          <Typography variant="h4" fontWeight={700} mb={2}>{product.name}</Typography>
+          <Typography variant="h4" fontWeight={700} mb={2}>
+            {product.name}
+          </Typography>
           <Chip label={`$${product.price.toFixed(2)}`} color="primary" sx={{ fontSize: 18, fontWeight: 700, mb: 2 }} />
-          <Typography variant="body1" color="text.secondary" mb={2}>{product.description}</Typography>
+          <Typography variant="body1" color="text.secondary" mb={2}>
+            {product.description}
+          </Typography>
           <Typography variant="body2" color={product.stock > 0 ? "success.main" : "error"} fontWeight={500} mb={2}>
             {product.stock > 0 ? `In Stock: ${product.stock}` : "Out of Stock"}
           </Typography>
           {product.categoryName && (
             <Chip label={product.categoryName} size="medium" sx={{ mb: 2, bgcolor: "#f0f0f0", color: "text.secondary" }} />
           )}
-          <Button
-            variant="contained"
-            color="primary"
-            size="large"
-            sx={{ mt: 3, px: 4, fontWeight: 600, fontSize: 18 }}
-            disabled={cartLoading || product.stock < 1}
-            onClick={() => addToCart(product.id || product.productId, 1)}
-          >
-            {product.stock < 1 ? "Out of Stock" : cartLoading ? "Adding..." : "Add to Cart"}
-          </Button>
+
+          {/* Centered Add to Cart Button */}
+          <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
+            <Button
+              variant="contained"
+              color="primary"
+              size="large"
+              sx={{
+                px: 4,
+                fontWeight: 600,
+                fontSize: 18,
+                borderRadius: 3,
+                transition: "background-color 0.3s ease, transform 0.2s ease",
+                "&:hover": {
+                  backgroundColor: "#115293",
+                  transform: "scale(1.05)"
+                }
+              }}
+              disabled={cartLoading || product.stock < 1}
+              onClick={() => addToCart(product.id || product.productId, 1)}
+            >
+              {product.stock < 1 ? "Out of Stock" : cartLoading ? "Adding..." : "Add to Cart"}
+            </Button>
+          </Box>
         </Box>
       </Box>
     </Paper>
